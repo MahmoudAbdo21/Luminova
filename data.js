@@ -1,0 +1,4 @@
+var initialData = {
+  "news": [],
+  "projects": []
+};
