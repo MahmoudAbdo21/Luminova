@@ -1,5 +1,24 @@
 var initialData = {
-  "news": [],
+  "news": [
+    {
+      "id": 1775042976889,
+      "date": "2026-04-01",
+      "text": {
+        "ar": "يسعدني الإعلان عن إطلاق (Magic Audio Studio)، استوديو ويب احترافي ومجاني لمعالجة وتحسين الصوتيات باستخدام الذكاء الاصطناعي! تعمل الأداة بالكامل داخل المتصفح بضغطة زر واحدة، وتقوم بعزل الضوضاء، وتوضيح مخارج الحروف، وتوحيد مستوى الصوت لمقاطع متعددة لتطابق المعايير الإذاعية (-20 LUFS) دون أي تشويه. الأداة تدعم 7 صيغ مختلفة للتحميل مع ميزة دمج الملفات في ZIP. أداة مثالية لصناع المحتوى، طلاب الجامعات، ومسجلي البودكاست.",
+        "en": "I'm thrilled to announce the launch of Magic Audio Studio, a free, professional web-based tool for AI audio mastering! Running entirely in your browser with just one click, it automatically removes background noise, enhances vocal clarity, and matches the volume of multiple tracks to broadcast standards (-20 LUFS) with zero artifacts. It supports exporting in 7 different formats and bulk downloading via ZIP. The perfect tool for content creators, students, and podcasters!"
+      },
+      "embedUrl": "https://mahmoudabdo21.github.io/Edit-Audio/"
+    },
+    {
+      "id": 1775042372864,
+      "date": "2026-04-01",
+      "text": {
+        "ar": "بفضل الله وتوفيقه، نعلن اليوم عن الإطلاق الرسمي لمنصة \"Luminova Edu\" التعليمية الحديثة. هذه المنصة هي ثمرة جهد ورؤية طموحة لخدمة زملائي طلاب تكنولوجيا التعليم، لتكون منارة للمعرفة، وتجمعاً رقمياً يسهل الوصول للملخصات، والاختبارات التفاعلية، وآخر المستجدات الأكاديمية. نسأل الله أن ينفع بها الجميع، وتكون خطوة راسخة نحو مستقبل تعليمي مشرق ومبتكر.",
+        "en": "With the grace of Allah, we proudly announce today the official launch of the \"Luminova Edu\" modern educational platform. This platform is the fruit of effort and an ambitious vision to serve my fellow EdTech students, aiming to be a beacon of knowledge and a digital hub that facilitates access to summaries, interactive quizzes, and the latest academic updates. We pray it benefits everyone and represents a steady step towards a bright and innovative educational future."
+      },
+      "embedUrl": "https://mahmoudabdo21.github.io/Luminova-Edu/"
+    }
+  ],
   "projects": [
     {
       "id": 1775015013267,
