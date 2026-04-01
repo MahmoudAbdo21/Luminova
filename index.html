@@ -122,6 +122,17 @@
         // --- 2. إزالة البيانات الثابتة (Failsafe Empty Structure) ---
         const emptyData = { news: [], projects: [] };
 
+        // Smart Logic: Auto Logo Fetching by AI-like domain detection
+        const getSmartLogoUrl = (projectUrl) => {
+            if (!projectUrl) return 'img/logo.png';
+            try {
+                const domain = new URL(projectUrl).hostname;
+                return `https://icon.horse/icon/${domain}`;
+            } catch (error) {
+                return 'img/logo.png';
+            }
+        };
+
         const ReadMore = ({ text, maxLength = 100, t }) => {
             const [isExpanded, setIsExpanded] = useState(false);
             if (!text) return null;
@@ -384,9 +395,9 @@
 
         const ProjectCard = ({ project, t, lang }) => {
             const [showExplanation, setShowExplanation] = useState(false);
-            const getDomain = (url) => { try { return new URL(url).hostname; } catch { return ''; } };
-            const fallbackLogo = project.url ? `https://icon.horse/icon/${getDomain(project.url)}` : 'https://via.placeholder.com/150?text=Logo';
-            const displayImg = project.imgUrl || fallbackLogo;
+            
+            // Smart Logic: Fetch logo directly from target link or use default if imgUrl is empty
+            const displayImg = project.imgUrl || getSmartLogoUrl(project.url);
             const hasExplanation = (project.longDesc && project.longDesc[lang]) || project.embedUrl;
             return (
                 <div className="glass-card rounded-2xl flex flex-col border border-slate-200/50 dark:border-slate-700/50 transition-all duration-300 hover:shadow-xl hover:shadow-gold/15 overflow-hidden h-full">
@@ -464,11 +475,12 @@
             const handleEditNews = (item) => { setNewsForm({ textAr: item.text.ar, textEn: item.text.en, embedUrl: item.embedUrl || '' }); setEditingNewsId(item.id); window.scrollTo({ top: 0, behavior: 'smooth' }); };
             const handleSaveProject = () => {
                 if(!projForm.nameAr) return;
+                const finalImgUrl = projForm.imgUrl.trim() === '' ? getSmartLogoUrl(projForm.url) : projForm.imgUrl;
                 if (editingProjId) {
-                    setData(prev => ({ ...prev, projects: prev.projects.map(p => p.id === editingProjId ? { ...p, name: { ar: projForm.nameAr, en: projForm.nameEn || projForm.nameAr }, url: projForm.url, imgUrl: projForm.imgUrl, shortDesc: { ar: projForm.shortAr, en: projForm.shortEn || projForm.shortAr }, longDesc: { ar: projForm.longAr, en: projForm.longEn }, embedUrl: projForm.embedUrl } : p) }));
+                    setData(prev => ({ ...prev, projects: prev.projects.map(p => p.id === editingProjId ? { ...p, name: { ar: projForm.nameAr, en: projForm.nameEn || projForm.nameAr }, url: projForm.url, imgUrl: finalImgUrl, shortDesc: { ar: projForm.shortAr, en: projForm.shortEn || projForm.shortAr }, longDesc: { ar: projForm.longAr, en: projForm.longEn }, embedUrl: projForm.embedUrl } : p) }));
                     setEditingProjId(null);
                 } else {
-                    const newEntry = { id: Date.now(), name: { ar: projForm.nameAr, en: projForm.nameEn || projForm.nameAr }, url: projForm.url, imgUrl: projForm.imgUrl, shortDesc: { ar: projForm.shortAr, en: projForm.shortEn || projForm.shortAr }, longDesc: { ar: projForm.longAr, en: projForm.longEn }, embedUrl: projForm.embedUrl };
+                    const newEntry = { id: Date.now(), name: { ar: projForm.nameAr, en: projForm.nameEn || projForm.nameAr }, url: projForm.url, imgUrl: finalImgUrl, shortDesc: { ar: projForm.shortAr, en: projForm.shortEn || projForm.shortAr }, longDesc: { ar: projForm.longAr, en: projForm.longEn }, embedUrl: projForm.embedUrl };
                     setData(prev => ({ ...prev, projects: [newEntry, ...prev.projects] }));
                 }
                 setProjForm({ nameAr: '', nameEn: '', url: '', imgUrl: '', shortAr: '', shortEn: '', longAr: '', longEn: '', embedUrl: '' });
@@ -477,6 +489,16 @@
             const handleEditProject = (item) => { setProjForm({ nameAr: item.name.ar, nameEn: item.name.en, url: item.url, imgUrl: item.imgUrl || '', shortAr: item.shortDesc.ar, shortEn: item.shortDesc.en, longAr: item.longDesc.ar, longEn: item.longDesc.en, embedUrl: item.embedUrl || '' }); setEditingProjId(item.id); window.scrollTo({ top: 0, behavior: 'smooth' }); };
             const handleDelete = (id, type) => { if(window.confirm(t('confirmDelete'))) { if (type === 'news') { setData(prev => ({ ...prev, news: prev.news.filter(n => n.id !== id) })); if(editingNewsId === id) setEditingNewsId(null); } else { setData(prev => ({ ...prev, projects: prev.projects.filter(p => p.id !== id) })); if(editingProjId === id) setEditingProjId(null); } } };
             const handleCancelEdit = () => { if (activeAdminTab === 'news') { setEditingNewsId(null); setNewsForm({ textAr: '', textEn: '', embedUrl: '' }); } else { setEditingProjId(null); setProjForm({ nameAr: '', nameEn: '', url: '', imgUrl: '', shortAr: '', shortEn: '', longAr: '', longEn: '', embedUrl: '' }); } };
+
+            const handleLogoUpload = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    setProjForm({ ...projForm, imgUrl: reader.result });
+                };
+                reader.readAsDataURL(file);
+            };
 
             // 4. تعديل دالة سحب الكود لتوليد كود JavaScript جاهز
             const handleExport = () => {
@@ -507,7 +529,7 @@
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                                <input type="text" placeholder={t('adminProjNameAr')} value={projForm.nameAr} onChange={(e) => setProjForm({...projForm, nameAr: e.target.value})} className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg p-3 focus:border-gold outline-none" /><input type="text" placeholder={t('adminProjNameEn')} value={projForm.nameEn} onChange={(e) => setProjForm({...projForm, nameEn: e.target.value})} className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg p-3 focus:border-gold outline-none" /><input type="text" placeholder={t('adminProjUrl')} value={projForm.url} onChange={(e) => setProjForm({...projForm, url: e.target.value})} className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg p-3 focus:border-gold outline-none" /><input type="text" placeholder={t('adminProjImg')} value={projForm.imgUrl} onChange={(e) => setProjForm({...projForm, imgUrl: e.target.value})} className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg p-3 focus:border-gold outline-none" /><textarea placeholder={t('adminProjShortAr')} value={projForm.shortAr} onChange={(e) => setProjForm({...projForm, shortAr: e.target.value})} className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg p-3 focus:border-gold outline-none h-24" /><textarea placeholder={t('adminProjShortEn')} value={projForm.shortEn} onChange={(e) => setProjForm({...projForm, shortEn: e.target.value})} className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg p-3 focus:border-gold outline-none h-24" /><textarea placeholder={t('adminProjLongAr')} value={projForm.longAr} onChange={(e) => setProjForm({...projForm, longAr: e.target.value})} className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg p-3 focus:border-gold outline-none h-24" /><textarea placeholder={t('adminProjLongEn')} value={projForm.longEn} onChange={(e) => setProjForm({...projForm, longEn: e.target.value})} className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg p-3 focus:border-gold outline-none h-24" /><input type="text" placeholder={t('adminProjEmbed')} value={projForm.embedUrl} onChange={(e) => setProjForm({...projForm, embedUrl: e.target.value})} className="col-span-1 md:col-span-2 w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg p-3 focus:border-gold outline-none" />
+                                <input type="text" placeholder={t('adminProjNameAr')} value={projForm.nameAr} onChange={(e) => setProjForm({...projForm, nameAr: e.target.value})} className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg p-3 focus:border-gold outline-none" /><input type="text" placeholder={t('adminProjNameEn')} value={projForm.nameEn} onChange={(e) => setProjForm({...projForm, nameEn: e.target.value})} className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg p-3 focus:border-gold outline-none" /><input type="text" placeholder={t('adminProjUrl')} value={projForm.url} onChange={(e) => setProjForm({...projForm, url: e.target.value})} className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg p-3 focus:border-gold outline-none" /><div className="w-full flex space-x-2 rtl:space-x-reverse"><input type="text" placeholder={`${t('adminProjImg')} - ${lang === 'ar' ? '(التوليد الذكي مفعّل - يمكنك تركه فارغاً)' : '(AI Enabled - Leave empty)'}`} value={projForm.imgUrl} onChange={(e) => setProjForm({...projForm, imgUrl: e.target.value})} className="flex-grow bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg p-3 focus:border-gold outline-none" /><label className="cursor-pointer flex items-center justify-center bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-600 transition-colors flex-shrink-0"><Icon name="Plus" size={20} className="me-1" /><span className="font-bold text-sm">{lang === 'ar' ? 'رفع' : 'Upload'}</span><input type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} /></label></div><textarea placeholder={t('adminProjShortAr')} value={projForm.shortAr} onChange={(e) => setProjForm({...projForm, shortAr: e.target.value})} className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg p-3 focus:border-gold outline-none h-24" /><textarea placeholder={t('adminProjShortEn')} value={projForm.shortEn} onChange={(e) => setProjForm({...projForm, shortEn: e.target.value})} className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg p-3 focus:border-gold outline-none h-24" /><textarea placeholder={t('adminProjLongAr')} value={projForm.longAr} onChange={(e) => setProjForm({...projForm, longAr: e.target.value})} className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg p-3 focus:border-gold outline-none h-24" /><textarea placeholder={t('adminProjLongEn')} value={projForm.longEn} onChange={(e) => setProjForm({...projForm, longEn: e.target.value})} className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg p-3 focus:border-gold outline-none h-24" /><input type="text" placeholder={t('adminProjEmbed')} value={projForm.embedUrl} onChange={(e) => setProjForm({...projForm, embedUrl: e.target.value})} className="col-span-1 md:col-span-2 w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg p-3 focus:border-gold outline-none" />
                             </div>
                         )}
                         <div className="flex space-x-3 rtl:space-x-reverse">
