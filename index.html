@@ -220,12 +220,16 @@
             const [isLoaderVisible, setIsLoaderVisible] = useState(true);
             const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
             
-            // 3. قراءة البيانات من الملف الخارجي أو الـ LocalStorage
+            // 3. قراءة البيانات — window.initialData (من data.js الجديد) له الأولوية القصوى دائماً
             const [data, setData] = useState(() => {
+                // ✅ الأولوية: data.js المُحدَّث من السيرفر يفوز دائماً على localStorage
+                if (typeof window !== 'undefined' && window.initialData) {
+                    localStorage.setItem('luminova_data_v6', JSON.stringify(window.initialData));
+                    return window.initialData;
+                }
+                // احتياطي: إذا لم يكن data.js موجوداً (حالة نادرة جداً)
                 const saved = localStorage.getItem('luminova_data_v6');
                 if (saved) return JSON.parse(saved);
-                // الأولوية لـ window.initialData القادم من data.js
-                if (typeof window !== 'undefined' && window.initialData) return window.initialData;
                 return emptyData;
             });
 
