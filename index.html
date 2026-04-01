@@ -30,8 +30,13 @@
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    <!-- 1. استدعاء ملف البيانات الخارجي -->
-    <script src="data.js"></script>
+    <!-- 1. استدعاء ملف البيانات الخارجي مع كسر الكاش (مرة واحدة فقط عند فتح الصفحة) -->
+    <script>
+        // Cache-Busting آمن: يعمل لمرة واحدة فقط عند فتح الصفحة.
+        // يستخدم document.write لضمان التحميل المتزامن (Blocking) قبل React.
+        // ممنوع منعاً باتاً: setInterval / setTimeout / location.reload
+        document.write('<script src="data.js?v=' + Date.now() + '"><\/script>');
+    </script>
 
     <style>
         body {
